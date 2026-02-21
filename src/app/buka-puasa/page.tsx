@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Calendar, MapPin, Phone, MessageSquare } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, MapPin, Phone, MessageSquare, RefreshCw } from "lucide-react";
 import { FormBukaPuasa } from "@/components/forms/FormBukaPuasa";
 import { LayoutWithSidebar } from "@/components/LayoutWithSidebar";
 import { Modal } from "@/components/Modal";
@@ -27,9 +27,16 @@ export default function BukaPuasaPage() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    const data = await getDonaturBukaPuasa();
-    setBukaPuasaData(data);
-    setIsLoading(false);
+    try {
+      console.log("Fetching buka puasa data...");
+      const data = await getDonaturBukaPuasa();
+      console.log("Received data:", data.length, "records");
+      setBukaPuasaData(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -111,18 +118,28 @@ export default function BukaPuasaPage() {
               Ramadhan 1447 H • Kelola jadwal buka puasa dengan mudah dan terorganisir
             </p>
           </div>
-          <button
-            onClick={() => {
-              setIsEditMode(false);
-              setEditData(null);
-              setIsModalOpen(true);
-            }}
-            className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm sm:text-base mt-4 sm:mt-0"
-          >
-            <Plus size={20} />
-            <span className="hidden sm:inline">Tambah Penyedia</span>
-            <span className="sm:hidden">Tambah</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={fetchData}
+              disabled={isLoading}
+              className="btn-secondary inline-flex items-center gap-2 px-3 py-2 text-sm"
+              title="Refresh Data"
+            >
+              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+            </button>
+            <button
+              onClick={() => {
+                setIsEditMode(false);
+                setEditData(null);
+                setIsModalOpen(true);
+              }}
+              className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm sm:text-base"
+            >
+              <Plus size={20} />
+              <span className="hidden sm:inline">Tambah Penyedia</span>
+              <span className="sm:hidden">Tambah</span>
+            </button>
+          </div>
         </div>
 
         {/* Table */}

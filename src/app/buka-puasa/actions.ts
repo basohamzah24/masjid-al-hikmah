@@ -11,7 +11,7 @@ export async function tambahDonaturBukaPuasa(formData: FormData) {
     const tanggal = new Date(formData.get("tanggal") as string);
     const keterangan = formData.get("keterangan") as string;
 
-    await prisma.bukaPuasa.create({
+    const result = await prisma.bukaPuasa.create({
       data: {
         nama,
         alamat: alamat || null,
@@ -22,7 +22,11 @@ export async function tambahDonaturBukaPuasa(formData: FormData) {
       },
     });
 
+    // Revalidate multiple paths untuk memastikan cache ter-refresh
     revalidatePath("/buka-puasa");
+    revalidatePath("/dashboard");
+    
+    console.log("Successfully added donatur:", result.id);
     return { success: true, message: "Penyedia buka puasa berhasil ditambahkan" };
   } catch (error) {
     console.error("Error adding buka puasa:", error);
@@ -61,11 +65,13 @@ export async function hapusDonaturBukaPuasa(id: number) {
 
 export async function getDonaturBukaPuasa() {
   try {
+    console.log("Fetching donatur buka puasa data...");
     const data = await prisma.bukaPuasa.findMany({
       orderBy: {
         tanggal: 'asc'
       }
     });
+    console.log(`Found ${data.length} donatur records`);
     return data;
   } catch (error) {
     console.error("Error fetching donatur:", error);
