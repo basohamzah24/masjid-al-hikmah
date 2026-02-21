@@ -1,54 +1,27 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card } from "@/components/Card";
 import { LayoutWithSidebar } from "@/components/LayoutWithSidebar";
-import { prisma } from "@/lib/prisma";
-import { TrendingUp, TrendingDown, Wallet, Calendar, User } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Calendar, User, RefreshCw } from "lucide-react";
+import { getDashboardData } from "./actions";
 
-// Force dynamic rendering untuk memastikan data selalu fresh
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-async function getDashboardData() {
-  try {
-    // Get all pemasukan data
-    const pemasukan = await prisma.pemasukan.findMany();
-    const totalPemasukan = pemasukan.reduce((sum, item) => sum + item.jumlah, 0);
-
-    // Get all pengeluaran data
-    const pengeluaran = await prisma.pengeluaran.findMany();
-    const totalPengeluaran = pengeluaran.reduce((sum, item) => sum + item.jumlah, 0);
-
-    // Calculate saldo
-    const saldo = totalPemasukan - totalPengeluaran;
-
-    // Get 5 latest pemasukan
-    const pemasukanTerbaru = await prisma.pemasukan.findMany({
-      orderBy: { tanggal: 'desc' },
-      take: 5,
-    });
-
-    // Get buka puasa schedule
-    const bukaPuasaSchedule = await prisma.bukaPuasa.findMany({
-      orderBy: { tanggal: 'asc' }
-    });
-
-    return {
-      totalPemasukan,
-      totalPengeluaran,
-      saldo,
-      pemasukanTerbaru,
-      bukaPuasaSchedule,
-    };
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-    return {
-      totalPemasukan: 0,
-      totalPengeluaran: 0,
-      saldo: 0,
-      pemasukanTerbaru: [],
-      bukaPuasaSchedule: [],
-    };
-  }
-}
+type DashboardData = {
+  totalPemasukan: number;
+  totalPengeluaran: number;
+  saldo: number;
+  pemasukanTerbaru: Array<{
+    id: number;
+    tanggal: Date;
+    sumber: string;
+    jumlah: number;
+  }>;
+  bukaPuasaSchedule: Array<{
+    id: number;
+    tanggal: Date;
+    nama: string;
+  }>;
+};
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('id-ID', {
@@ -73,25 +46,85 @@ function getRamadanDay(date: Date) {
   return diffDays;
 }
 
-export default async function Dashboard() {
+export default function Dashboard() {
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    totalPemasukan: 0,
+    totalPengeluaran: 0,
+    saldo: 0,
+    pemasukanTerbaru: [],
+    bukaPuasaSchedule: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      console.log("Fetching dashboard data...");
+      const data = await getDashboardData();
+      console.log("Dashboard data received");
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getDashboardData();
+        if (isMounted) {
+          setDashboardData(data);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const {
     totalPemasukan,
     totalPengeluaran,
     saldo,
     pemasukanTerbaru,
     bukaPuasaSchedule,
-  } = await getDashboardData();
+  } = dashboardData;
 
   return (
     <LayoutWithSidebar>
       <div className="px-4 py-2 sm:p-6 lg:p-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 flex items-center gap-3">
-          🕌 Dashboard Keuangan Masjid
-        </h1>
+        {/* Header with Refresh Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3 mb-4 sm:mb-0">
+            🕌 Dashboard Keuangan Masjid
+          </h1>
+          <button
+            onClick={fetchData}
+            disabled={isLoading}
+            className="btn-secondary inline-flex items-center gap-2 px-3 py-2 text-sm self-start sm:self-auto"
+            title="Refresh Data Dashboard"
+          >
+            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+            <span className="hidden sm:inline">{isLoading ? "Loading..." : "Refresh"}</span>
+          </button>
+        </div>
         
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition-shadow">
+          <div className={`bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition-all ${isLoading ? 'opacity-50' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600">Total Pemasukan</p>
@@ -105,7 +138,7 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6 hover:shadow-md transition-shadow">
+          <div className={`bg-white rounded-xl shadow-sm border border-red-200 p-6 hover:shadow-md transition-all ${isLoading ? 'opacity-50' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-red-600">Total Pengeluaran</p>
@@ -119,7 +152,7 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6 hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+          <div className={`bg-white rounded-xl shadow-sm border border-blue-200 p-6 hover:shadow-md transition-all sm:col-span-2 lg:col-span-1 ${isLoading ? 'opacity-50' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Total Saldo</p>
@@ -140,12 +173,17 @@ export default async function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           
           {/* Pemasukan Terbaru */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all ${isLoading ? 'opacity-50' : ''}`}>
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               💰 Pemasukan Terbaru
             </h2>
             <div className="space-y-4">
-              {pemasukanTerbaru.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <RefreshCw className="w-12 h-12 mx-auto mb-3 text-gray-300 animate-spin" />
+                  <p>Loading data...</p>
+                </div>
+              ) : pemasukanTerbaru.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <TrendingUp className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>Belum ada data pemasukan</p>
@@ -188,12 +226,17 @@ export default async function Dashboard() {
           </div>
 
           {/* Jadwal Buka Puasa Ramadhan */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all ${isLoading ? 'opacity-50' : ''}`}>
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               🌙 Jadwal Penyedia Buka Puasa Ramadhan
             </h2>
             <div className="space-y-4">
-              {bukaPuasaSchedule.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <RefreshCw className="w-12 h-12 mx-auto mb-3 text-gray-300 animate-spin" />
+                  <p>Loading jadwal...</p>
+                </div>
+              ) : bukaPuasaSchedule.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>Belum ada jadwal buka puasa</p>
