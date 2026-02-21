@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pemasukan {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime
+  sumber     String
+  kategori   String
+  jumlah     Int
+  keterangan String?
+  createdAt  DateTime @default(now())
+}
+
+model Pengeluaran {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime
+  tujuan     String
+  kategori   String
+  jumlah     Int
+  keterangan String?
+  createdAt  DateTime @default(now())
+}
+
+model BukaPuasa {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime
+  nama       String
+  alamat     String?
+  telepon    String?
+  keterangan String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}
