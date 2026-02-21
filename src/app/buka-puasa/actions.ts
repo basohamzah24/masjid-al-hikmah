@@ -42,6 +42,7 @@ export async function updateStatusBukaPuasa(id: number, status: string) {
     });
 
     revalidatePath("/buka-puasa");
+    revalidatePath("/dashboard");
     return { success: true, message: "Status berhasil diupdate" };
   } catch (error) {
     console.error("Error updating status:", error);
@@ -56,6 +57,7 @@ export async function hapusDonaturBukaPuasa(id: number) {
     });
 
     revalidatePath("/buka-puasa");
+    revalidatePath("/dashboard");
     return { success: true, message: "Donatur berhasil dihapus" };
   } catch (error) {
     console.error("Error deleting donatur:", error);
@@ -99,6 +101,7 @@ export async function editDonaturBukaPuasa(id: number, formData: FormData) {
     });
 
     revalidatePath("/buka-puasa");
+    revalidatePath("/dashboard");
     return { success: true, message: "Penyedia buka puasa berhasil diupdate" };
   } catch (error) {
     console.error("Error editing donatur:", error);

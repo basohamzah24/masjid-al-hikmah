@@ -3,6 +3,10 @@ import { LayoutWithSidebar } from "@/components/LayoutWithSidebar";
 import { prisma } from "@/lib/prisma";
 import { TrendingUp, TrendingDown, Wallet, Calendar, User } from "lucide-react";
 
+// Force dynamic rendering untuk memastikan data selalu fresh
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getDashboardData() {
   try {
     // Get all pemasukan data

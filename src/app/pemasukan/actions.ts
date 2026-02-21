@@ -22,6 +22,7 @@ export async function tambahPemasukan(formData: FormData) {
     });
 
     revalidatePath("/pemasukan");
+    revalidatePath("/dashboard");
     return { success: true, message: "Pemasukan berhasil ditambahkan" };
   } catch (error) {
     console.error("Error adding pemasukan:", error);
@@ -36,6 +37,7 @@ export async function hapusPemasukan(id: number) {
     });
 
     revalidatePath("/pemasukan");
+    revalidatePath("/dashboard");
     return { success: true, message: "Pemasukan berhasil dihapus" };
   } catch (error) {
     console.error("Error deleting pemasukan:", error);
@@ -77,6 +79,7 @@ export async function editPemasukan(id: number, formData: FormData) {
     });
 
     revalidatePath("/pemasukan");
+    revalidatePath("/dashboard");
     return { success: true, message: "Pemasukan berhasil diupdate" };
   } catch (error) {
     console.error("Error editing pemasukan:", error);
