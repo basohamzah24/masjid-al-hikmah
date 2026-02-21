@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Menu } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 
 interface LayoutWithSidebarProps {
@@ -11,6 +11,7 @@ interface LayoutWithSidebarProps {
 export function LayoutWithSidebar({ children }: LayoutWithSidebarProps) {
   // Default sidebar terbuka di desktop untuk mengurangi "goyang"
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Auto-close sidebar on mobile, keep open on desktop
   useEffect(() => {
@@ -27,22 +28,52 @@ export function LayoutWithSidebar({ children }: LayoutWithSidebarProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Handle outside click to close sidebar
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (window.innerWidth < 1024 && sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        // Check if click is not on the menu button
+        const target = event.target as HTMLElement;
+        if (!target.closest('.mobile-menu-button')) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    if (sidebarOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [sidebarOpen]);
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   return (
     <div className="layout-container min-h-screen bg-gray-50">
-      {/* Mobile menu button */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-green-700 text-white p-2 rounded-md shadow-lg"
-      >
-        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      {/* Overlay untuk mobile */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-30 lg:hidden" />
+      )}
+
+      {/* Mobile menu button - hanya tampil ketika sidebar tertutup */}
+      {!sidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="mobile-menu-button lg:hidden fixed top-4 left-4 z-50 bg-green-700 text-white p-2 rounded-md shadow-lg"
+        >
+          <Menu size={20} />
+        </button>
+      )}
 
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <div ref={sidebarRef}>
+        <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      </div>
 
       {/* Main content */}
       <div
