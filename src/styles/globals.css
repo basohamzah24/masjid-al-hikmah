@@ -53,17 +53,45 @@ html {
   @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-.btn-secondary {
-  @apply bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
-}
-
 .btn-danger {
   @apply bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
 }
 
-/* Form styles */
+/* Form styles - Force light theme untuk input forms */
 .form-input {
   @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-sm sm:text-base;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+.form-input:focus {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+.form-input::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Styling khusus untuk select dan textarea */
+select.form-input {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+select.form-input option {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+textarea.form-input {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  resize: vertical;
+}
+
+textarea.form-input::placeholder {
+  color: #6b7280 !important;
 }
 
 .form-label {
